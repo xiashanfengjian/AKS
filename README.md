@@ -27,4 +27,4 @@ This is an akshare-based stock backtesting framework
 
 13.class G():非常重要，这是一个全局类，用于方便用户在初始化函数和策略函数里随心所欲地定义变量，这些变量都会被存在g的属性里
 
-14.使用时需要导入aks.py,获取交易日信息，并新建Init函数记录取票代码等信息。新建handle函数，进行策略部署，然后调用run函数即可。
+14.使用时需要导入aks.py,获取交易日信息，并新建Init函数记录取票代码等信息。新建handle函数，进行策略部署，然后调用run函数即可。在aks.py最后有一示例代码文件。
