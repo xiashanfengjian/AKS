@@ -167,38 +167,38 @@ enable_hist_df = pd.read_csv('history.csv',parse_dates=['trade_date'])
 enable_hist_df.columns = [
     'list',
     'trade_date',
-]
+] # 这里的交易日数据需要用户使用trade_get()自行获取并保存
 # ---------------------------------------------
 
 
 # 用户函数：示例如下
 
-def Init(Context):
-    g.code = '601318'
-    g.a = 5
-    g.b = 1000
-    g.c = 'open'
-    pass
+# def Init(Context):
+#     g.code = '601318'
+#     g.a = 5
+#     g.b = 1000
+#     g.c = 'open'
+#     pass
 
-def handle(Context,td):
-    # 是否要考虑停牌？
-    history = Stock_range(get_stock(g.code,Context.fq),Context,enable_hist_df,td,60)
-    if len(history) == 0:
-        print(f"\033[34m{'今日停牌，不交易'}\033[0m")
-    else:
-        ma5 = history['close'][-5:].mean()
-        ma20 = history['close'][:].mean()
-        if ma5>ma20 and g.code not in Context.positions:
-            order_value(Context,g.code,Context.cash,g.c)
-        elif ma5<ma20 and g.code in Context.positions:
-            order_target(Context,g.code,0,g.c)
-    return
+# def handle(Context,td):
+#     # 是否要考虑停牌？
+#     history = Stock_range(get_stock(g.code,Context.fq),Context,enable_hist_df,td,60)
+#     if len(history) == 0:
+#         print(f"\033[34m{'今日停牌，不交易'}\033[0m")
+#     else:
+#         ma5 = history['close'][-5:].mean()
+#         ma20 = history['close'][:].mean()
+#         if ma5>ma20 and g.code not in Context.positions:
+#             order_value(Context,g.code,Context.cash,g.c)
+#         elif ma5<ma20 and g.code in Context.positions:
+#             order_target(Context,g.code,0,g.c)
+#     return
 
 
-def benchmark():
+# def benchmark():
 
-    pass
+#     pass
 
-# Test
-C = Context(100000,'2010-01-01','2017-01-01','hfq')
-run(C)
+# # Test
+# C = Context(100000,'2010-01-01','2017-01-01','hfq')
+# run(C)
