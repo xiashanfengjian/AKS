@@ -1,0 +1,192 @@
+import akshare as ak
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import dateutil
+import random
+
+# ---------------------------------------------
+enable_hist_df = pd.read_csv('history.csv',parse_dates=['trade_date'])
+enable_hist_df.columns = [
+    'list',
+    'trade_date',
+]
+# ---------------------------------------------
+
+
+def trade_get():
+    enable_hist_df = ak.tool_trade_date_hist_sina()
+    enable_hist_df.columns = ['list','trade_date',]
+    enable_hist_df['trade_date'] = pd.to_datetime(enable_hist_df['trade_date'])
+    return enable_hist_df
+
+def get_stock(code,fq):
+    # 获取并保存数据
+    try:
+        f = open(code+'.csv','r')
+        stock_df = pd.read_csv(f)
+    except:
+        print(1)
+        stock_df = ak.stock_zh_a_hist(symbol=code, adjust=fq).iloc[:, :6]
+        stock_df.columns = [
+            'date',
+            'open',
+            'close',
+            'high',
+            'low',
+            'volume',
+        ]
+        stock_df.to_csv(code + '.csv')
+    stock_df.index = pd.to_datetime(stock_df['date'])
+    stock_df.index_col = 'date'
+    return stock_df
+
+# 获取一定范围内的数据
+def Stock_range(stock_df,Context,enable_hist_df,td,count):
+    list = np.array(Context.date_range['list'])
+    stock_range = stock_df[stock_df['date'].between(enable_hist_df['trade_date'][list[td]-count],enable_hist_df['trade_date'][list[td]-1])]
+    return stock_range
+
+# 预留，上面函数似乎过于复杂，留待简化
+def Stock_hist(td,code,count):
+    return
+
+# 后续考虑滑点
+def get_today_data(Context,code):
+    today = Context.dt.strftime('%Y-%m-%d')
+    da = get_stock(code,Context.fq)
+    data = da[da['date']==today][:]
+    return data
+
+# 已经考虑停牌，后续考虑分红
+def order_root(Context,today_price,code,amount,o_or_c):
+    if len(today_price) == 0:
+        print(f"\033[33m{'今日停牌！'}\033[0m")
+        return
+    ymd = today_price['date'][0]
+    today_price = today_price[o_or_c][0]
+    if amount>0:
+        if Context.cash - amount*today_price < 0:
+            amount = int(int(Context.cash/today_price)/100)
+            if amount == 0:
+                print(f"\033[31m{ymd}\033[0m",f"\033[33m{':现金严重不足，无法买入！！！'}\033[0m")
+            else:
+                amount = amount*100
+                print(f"\033[31m{ymd}\033[0m",f"\033[33m{':现金不足，已帮您调整为%d' % (amount)}\033[0m")
+        else:
+            amount = int(amount/100)
+            amount = amount*100
+            print(f"\033[31m{ymd}\033[0m",f"\033[33m{':现金充足，已做整数调整，调整后买入%d' % (amount)}\033[0m")
+    else:
+        if amount+Context.positions.get(code,0)<=0:
+            if Context.positions.get(code,0)==0:
+                amount = -Context.positions.get(code,0)
+                print(f"\033[31m{ymd}\033[0m",f"\033[33m{':持仓为0，无法卖出！'}\033[0m")
+            else:
+                amount = -Context.positions.get(code,0)
+                print(f"\033[31m{ymd}\033[0m",f"\033[33m{':持仓不足，全仓卖出！'}\033[0m")
+        else:
+            amount = int(amount/100)
+            amount = amount*100
+            print(f"\033[31m{ymd}\033[0m",f"\033[33m{':持仓充足，已做整数调整，调整后卖出%d' % amount}\033[0m")
+
+    Context.cash -= amount*today_price
+    # print(Context.cash)
+    Context.positions[code] = Context.positions.get(code,0)+amount
+    # print(Context.positions)
+    if Context.positions[code] == 0:
+        del Context.positions[code]
+    return
+
+def order(Context,code,amount,o_or_c):
+    today_price = get_today_data(Context,code)
+    order_root(Context,today_price,code,amount,o_or_c)
+
+def order_target(Context,code,amount,o_or_c):
+    if amount<0:
+        print('数量不能为负，已调整为0')
+    today_price = get_today_data(Context,code)
+    hold_amount = Context.positions.get(code,0)
+    delta_amount = amount - hold_amount
+    order_root(Context,today_price,code,delta_amount,o_or_c)
+
+def order_value(Context,code,value,o_or_c):
+    today_price = get_today_data(Context,code)
+    amount = int(value/today_price[o_or_c][0])
+    order_root(Context,today_price,code,amount,o_or_c)
+
+def order_target_value(Context,code,value,o_or_c):
+    if value<0:
+        print('价值不能为负，已调整为0')
+
+    # 停牌是否有问题
+    today_price = get_today_data(Context,code)
+    hold_value = Context.positions.get(code,0)*today_price[o_or_c][0]
+    delta_value = value - hold_value
+    order_value(Context,code,delta_value,o_or_c)
+
+# 非常重要，这是一个全局类，用于方便用户在初始化函数和策略函数里随心所欲地定义变量，这些变量都会被存在g的属性里
+class G:
+    pass
+g = G()
+
+# 回测函数
+def run(Context):
+    Init(Context)
+    init_cash = Context.cash
+    plt_value = pd.DataFrame(index=pd.to_datetime(Context.date_range['trade_date']),columns=['value'])
+    last_prize = {}
+    for td in Context.date_range['trade_date']:
+        Context.dt = dateutil.parser.parse(str(td))
+        handle(Context)
+        Cash = Context.cash
+        for stock_code in Context.positions:
+            today_p = get_today_data(Context,stock_code)
+            if len(today_p) == 0:
+                p = last_prize[stock_code]
+            else:
+                p = today_p['open'][0]
+                last_prize[stock_code] = p
+            Cash += p*Context.positions[stock_code]
+        plt_value.loc[td,'value'] = Cash
+        print(Cash)
+    plt_value['return'] = (plt_value['value']-init_cash) / init_cash
+    plt_value[['return']].plot()
+    plt.show()
+
+class Context:
+    def __init__(self, cash, date_start, date_end, fq):
+        self.cash = cash
+        self.date_start = date_start
+        self.date_end = date_end
+        self.fq = fq
+        self.positions = {}
+        self.benchmark = None
+        self.date_range = enable_hist_df[enable_hist_df['trade_date'].between(date_start,date_end)]
+        self.dt = None  # dateutil.parser.parse(date_start)
+
+# 用户函数：
+
+def Init(Context):
+    g.code = '601318'
+    g.a = 5
+    g.b = 1000
+    g.c = 'open'
+    pass
+
+def handle(Context):
+    # 是否要考虑停牌？
+    get_stock(g.code,Context.fq)
+    g.d = random.choice([1,-1])
+    # print(g.d)
+    order(Context,g.code,g.d*g.b,g.c)
+    return
+
+
+def benchmark():
+
+    pass
+
+# Test
+C = Context(100000,'2010-01-01','2017-01-01','hfq')
+run(C)
