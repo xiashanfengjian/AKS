@@ -1,6 +1,3 @@
-# quant_test
-This is an akshare-based stock backtesting framework
-# quant_test
 This is an akshare-based stock backtesting framework
 # 包括10个主要函数func：
 1.trade_get():获取交易日数据
