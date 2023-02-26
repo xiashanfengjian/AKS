@@ -162,13 +162,13 @@ class Context:
         self.dt = None  # dateutil.parser.parse(date_start)
 
 
-# ---------------------------------------------
-enable_hist_df = pd.read_csv('history.csv',parse_dates=['trade_date'])
-enable_hist_df.columns = [
-    'list',
-    'trade_date',
-] # 这里的交易日数据需要用户使用trade_get()自行获取并保存
-# ---------------------------------------------
+# # ---------------------------------------------
+# enable_hist_df = pd.read_csv('history.csv',parse_dates=['trade_date'])
+# enable_hist_df.columns = [
+#     'list',
+#     'trade_date',
+# ] # 这里的交易日数据需要用户使用trade_get()自行获取并保存
+# # ---------------------------------------------
 
 
 # 用户函数：示例如下
