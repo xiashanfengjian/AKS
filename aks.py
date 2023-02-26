@@ -5,13 +5,7 @@ import numpy as np
 import dateutil
 import random
 
-# ---------------------------------------------
-enable_hist_df = pd.read_csv('history.csv',parse_dates=['trade_date'])
-enable_hist_df.columns = [
-    'list',
-    'trade_date',
-]
-# ---------------------------------------------
+
 
 
 def trade_get():
@@ -43,8 +37,13 @@ def get_stock(code,fq):
 
 # 获取一定范围内的数据
 def Stock_range(stock_df,Context,enable_hist_df,td,count):
-    list = np.array(Context.date_range['list'])
-    stock_range = stock_df[stock_df['date'].between(enable_hist_df['trade_date'][list[td]-count],enable_hist_df['trade_date'][list[td]-1])]
+    list = stock_df['date'].tolist()
+    try:
+        index = list.index(td.strftime('%Y-%m-%d'))
+        stock_range = stock_df[stock_df['date'].between(stock_df['date'][index-count],stock_df['date'][index-1])]
+    except:
+        stock_range = []
+    # print(stock_range)
     return stock_range
 
 # 预留，上面函数似乎过于复杂，留待简化
@@ -138,7 +137,7 @@ def run(Context):
     last_prize = {}
     for td in Context.date_range['trade_date']:
         Context.dt = dateutil.parser.parse(str(td))
-        handle(Context)
+        handle(Context,td)
         Cash = Context.cash
         for stock_code in Context.positions:
             today_p = get_today_data(Context,stock_code)
@@ -149,7 +148,7 @@ def run(Context):
                 last_prize[stock_code] = p
             Cash += p*Context.positions[stock_code]
         plt_value.loc[td,'value'] = Cash
-        print(Cash)
+        # print(Cash)
     plt_value['return'] = (plt_value['value']-init_cash) / init_cash
     plt_value[['return']].plot()
     plt.show()
@@ -165,7 +164,17 @@ class Context:
         self.date_range = enable_hist_df[enable_hist_df['trade_date'].between(date_start,date_end)]
         self.dt = None  # dateutil.parser.parse(date_start)
 
-# 用户函数：
+
+# ---------------------------------------------
+enable_hist_df = pd.read_csv('history.csv',parse_dates=['trade_date'])
+enable_hist_df.columns = [
+    'list',
+    'trade_date',
+]
+# ---------------------------------------------
+
+
+# 用户函数：示例如下
 
 def Init(Context):
     g.code = '601318'
@@ -174,12 +183,18 @@ def Init(Context):
     g.c = 'open'
     pass
 
-def handle(Context):
+def handle(Context,td):
     # 是否要考虑停牌？
-    get_stock(g.code,Context.fq)
-    g.d = random.choice([1,-1])
-    # print(g.d)
-    order(Context,g.code,g.d*g.b,g.c)
+    history = Stock_range(get_stock(g.code,Context.fq),Context,enable_hist_df,td,60)
+    if len(history) == 0:
+        print(f"\033[34m{'今日停牌，不交易'}\033[0m")
+    else:
+        ma5 = history['close'][-5:].mean()
+        ma20 = history['close'][:].mean()
+        if ma5>ma20 and g.code not in Context.positions:
+            order_value(Context,g.code,Context.cash,g.c)
+        elif ma5<ma20 and g.code in Context.positions:
+            order_target(Context,g.code,0,g.c)
     return
 
 
