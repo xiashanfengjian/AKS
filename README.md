@@ -1,6 +1,7 @@
 This is an akshare-based stock backtesting framework.
 The stock data here is from akshare.
 Aks provides the basic framework needed for backtesting, which you can modify and update to meet your personal needs.
+If you want to change to another data source, you can easily modify it.
 
 # 包括10个主要函数func：
 
