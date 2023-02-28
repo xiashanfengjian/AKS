@@ -1,4 +1,7 @@
-This is an akshare-based stock backtesting framework
+This is an akshare-based stock backtesting framework.
+The stock data here is from akshare.
+Aks provides the basic framework needed for backtesting, which you can modify and update to meet your personal needs.
+
 # 包括10个主要函数func：
 
 1.trade_get():获取交易日数据
