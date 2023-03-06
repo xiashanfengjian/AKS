@@ -1,9 +1,30 @@
 import akshare as ak
+import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import dateutil
+import random
 
+
+if True:
+    matplotlib.rcParams['axes.linewidth']       = 1
+    matplotlib.rcParams['xtick.major.size']     = 6
+    matplotlib.rcParams['xtick.major.width']    = 1
+    matplotlib.rcParams['xtick.minor.size']     = 6
+    matplotlib.rcParams['xtick.minor.width']    = 1
+    matplotlib.rcParams['ytick.major.size']     = 6
+    matplotlib.rcParams['ytick.major.width']    = 1
+    matplotlib.rcParams['ytick.minor.size']     = 6
+    matplotlib.rcParams['ytick.minor.width']    = 1
+    matplotlib.rcParams['ytick.direction']     = 'in'
+    matplotlib.rcParams['xtick.direction']    = 'in'
+
+    matplotlib.rcParams['xtick.major.pad']      = 10
+    matplotlib.rcParams['ytick.major.pad']      = 10
+
+    matplotlib.rcParams['mathtext.default']     = 'regular'
+#-- End
 
 def trade_get():
     enable_hist_df = ak.tool_trade_date_hist_sina()
@@ -129,6 +150,7 @@ g = G()
 # 回测函数
 def run(Context):
     Init(Context)
+    init_ben = benchmark(Context)
     init_cash = Context.cash
     plt_value = pd.DataFrame(index=pd.to_datetime(Context.date_range['trade_date']),columns=['value'])
     last_prize = {}
@@ -144,11 +166,38 @@ def run(Context):
                 p = today_p['open'][0]
                 last_prize[stock_code] = p
             Cash += p*Context.positions[stock_code]
+            
         plt_value.loc[td,'value'] = Cash
+
+        # benchmark
+        today_p_ben = get_today_data(Context,Context.benchmark)
+        if len(today_p_ben) == 0:
+            p2 = last_prize[Context.benchmark]
+        else:
+            p2 = today_p_ben['close'][0]
+            last_prize[Context.benchmark] = p2
+        plt_value.loc[td,'value_ben'] = p2
         # print(Cash)
+
+    # plot
     plt_value['return'] = (plt_value['value']-init_cash) / init_cash
-    plt_value[['return']].plot()
+    plt_value['benchmarker'] = (plt_value['value_ben'] - init_ben) / init_ben
+    plt_value[['return','benchmarker']].plot()
+    plt.axhline(y=0,c='grey',ls='--',lw=1,zorder=0)
+    plt.grid(alpha=0.4)
+    plt.xlabel(u'Date',fontsize=16)
+    plt.ylabel(u'Return',fontsize=16)
     plt.show()
+
+def set_benchmark(Context,code):
+    Context.benchmark = code
+
+def benchmark(Context):
+    stock_df = get_stock(Context.benchmark,Context.fq)
+    stock_range = stock_df[stock_df['date'].between(Context.date_start,Context.date_end)]
+    # stock_range[['close']].plt()
+    init_r = stock_range['close'][0]
+    return init_r
 
 class Context:
     def __init__(self, cash, date_start, date_end, fq):
@@ -157,32 +206,29 @@ class Context:
         self.date_end = date_end
         self.fq = fq
         self.positions = {}
-        self.benchmark = None
+        self.benchmark = '00'
         self.date_range = enable_hist_df[enable_hist_df['trade_date'].between(date_start,date_end)]
         self.dt = None  # dateutil.parser.parse(date_start)
 
+# 使用示例example：
 
 # # ---------------------------------------------
 # enable_hist_df = pd.read_csv('history.csv',parse_dates=['trade_date'])
 # enable_hist_df.columns = [
 #     'list',
 #     'trade_date',
-# ] # 这里的交易日数据需要用户使用trade_get()自行获取并保存
+# ]
 # # ---------------------------------------------
-
-
-# 用户函数：示例如下
-
+# # 用户函数：
 # def Init(Context):
 #     g.code = '601318'
-#     g.a = 5
-#     g.b = 1000
+#     set_benchmark(Context,g.code)
 #     g.c = 'open'
 #     pass
-
+#
 # def handle(Context,td):
 #     # 是否要考虑停牌？
-#     history = Stock_range(get_stock(g.code,Context.fq),Context,enable_hist_df,td,60)
+#     history = Stock_range(get_stock(g.code,Context.fq),Context,enable_hist_df,td,10)
 #     if len(history) == 0:
 #         print(f"\033[34m{'今日停牌，不交易'}\033[0m")
 #     else:
@@ -193,12 +239,8 @@ class Context:
 #         elif ma5<ma20 and g.code in Context.positions:
 #             order_target(Context,g.code,0,g.c)
 #     return
-
-
-# def benchmark():
-
-#     pass
-
+#
+#
 # # Test
-# C = Context(100000,'2010-01-01','2017-01-01','hfq')
+# C = Context(100000,'2013-01-01','2015-06-01','hfq')
 # run(C)
