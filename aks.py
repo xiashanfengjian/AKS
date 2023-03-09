@@ -96,16 +96,21 @@ def order_root(Context,today_price,code,amount,o_or_c):
             print(f"\033[31m{ymd}\033[0m",f"\033[33m{':现金充足，已做整数调整，调整后买入%d' % (amount)}\033[0m")
     else:
         if amount+Context.positions.get(code,0)<=0:
-            if Context.positions.get(code,0)==0:
-                amount = -Context.positions.get(code,0)
-                print(f"\033[31m{ymd}\033[0m",f"\033[33m{':持仓为0，无法卖出！'}\033[0m")
-            else:
+            if amount+Context.positions.get(code,0)<0:
                 amount = -Context.positions.get(code,0)
                 print(f"\033[31m{ymd}\033[0m",f"\033[33m{':持仓不足，全仓卖出！'}\033[0m")
+            elif Context.positions.get(code,0)==0:
+                amount = -Context.positions.get(code,0)
+                print(f"\033[31m{ymd}\033[0m",f"\033[33m{':持仓为0，无法卖出！'}\033[0m")
+            elif amount+Context.positions.get(code,0)==0:
+                amount = -Context.positions.get(code,0)
+                print(f"\033[31m{ymd}\033[0m",f"\033[33m{':持仓刚好，全仓卖出！'}\033[0m")
+            
+
         else:
             amount = int(amount/100)
             amount = amount*100
-            print(f"\033[31m{ymd}\033[0m",f"\033[33m{':持仓充足，已做整数调整，调整后卖出%d' % amount}\033[0m")
+            print(f"\033[31m{ymd}\033[0m",f"\033[33m{':持仓充足，已做整数调整，调整后卖出%d' % -amount}\033[0m")
 
     Context.cash -= amount*today_price
     # print(Context.cash)
@@ -210,37 +215,76 @@ class Context:
         self.date_range = enable_hist_df[enable_hist_df['trade_date'].between(date_start,date_end)]
         self.dt = None  # dateutil.parser.parse(date_start)
 
-# 使用示例example：
+def print_end():
+    print('初始化完成')
 
-# # ---------------------------------------------
-# enable_hist_df = pd.read_csv('history.csv',parse_dates=['trade_date'])
-# enable_hist_df.columns = [
-#     'list',
-#     'trade_date',
-# ]
-# # ---------------------------------------------
-# # 用户函数：
-# def Init(Context):
-#     g.code = '601318'
-#     set_benchmark(Context,g.code)
-#     g.c = 'open'
-#     pass
-#
-# def handle(Context,td):
-#     # 是否要考虑停牌？
-#     history = Stock_range(get_stock(g.code,Context.fq),Context,enable_hist_df,td,10)
-#     if len(history) == 0:
-#         print(f"\033[34m{'今日停牌，不交易'}\033[0m")
-#     else:
-#         ma5 = history['close'][-5:].mean()
-#         ma20 = history['close'][:].mean()
-#         if ma5>ma20 and g.code not in Context.positions:
-#             order_value(Context,g.code,Context.cash,g.c)
-#         elif ma5<ma20 and g.code in Context.positions:
-#             order_target(Context,g.code,0,g.c)
-#     return
-#
-#
-# # Test
-# C = Context(100000,'2013-01-01','2015-06-01','hfq')
-# run(C)
+# 用户函数：
+
+def Init(Context):
+    g.code = '600036'
+    set_benchmark(Context,g.code)
+    g.c = 'open'
+    g.k = 2
+    g.cash = Context.cash
+    print_end()
+    pass
+
+# ---------------------------------------------
+enable_hist_df = pd.read_csv('history.csv',parse_dates=['trade_date'])
+enable_hist_df.columns = [
+    'list',
+    'trade_date',
+]
+# ---------------------------------------------
+
+def handle0(Context,td):
+    # 是否要考虑停牌？
+    history = Stock_range(get_stock(g.code,Context.fq),Context,enable_hist_df,td,10)
+    if len(history) == 0:
+        print(f"\033[34m{'今日停牌，不交易'}\033[0m")
+    else:
+        ma5 = history['close'][-5:].mean()
+        ma20 = history['close'][:].mean()
+        if ma5>ma20 and g.code not in Context.positions:
+            order_value(Context,g.code,Context.cash,g.c)
+        elif ma5<ma20 and g.code in Context.positions:
+            order_target(Context,g.code,0,g.c)
+    return
+
+def handle1(Context,td):
+    # 是否要考虑停牌？
+    history = Stock_range(get_stock(g.code,Context.fq),Context,enable_hist_df,td,20)
+    if len(history) == 0:
+        print(f"\033[34m{'今日停牌，不交易'}\033[0m")
+    else:
+        ma = history['close'][:].mean()
+        up = ma + g.k*history['close'].std()
+        low = ma - g.k*history['close'].std()
+
+        p = get_today_data(Context,g.code)['close'][0]
+
+        cash = Context.cash
+        if p <= low and g.code:
+            order_value(Context,g.code,g.cash/5,g.c)
+        elif p >= up and g.code in Context.positions:
+            order_target(Context,g.code,0,g.c)
+    return
+
+def handle(Context,td):
+    p = get_today_data(Context,g.code)
+    if len(p) == 0:
+        print(f"\033[34m{'今日停牌，不交易'}\033[0m")
+    else:
+        a = random.choice([0,1])
+        if a==0:
+            order_value(Context,g.code,Context.cash/2,g.c)
+        else:
+            order_target(Context,g.code,Context.positions[g.code]/2,g.c)
+
+
+
+        
+
+
+
+E7%
