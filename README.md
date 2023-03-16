@@ -35,3 +35,5 @@ You can customize functions, change data sources, and even easily modify interna
 14.使用时需要导入aks.py,获取交易日信息，并新建Init函数记录取票代码等信息。新建handle函数，进行策略部署，然后调用run函数即可。在aks.py最后有一示例代码文件。
 
 15.2023.3.2更新了benchmark.和改善了图形界面。
+
+16.601318是测试用数据
