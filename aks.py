@@ -54,6 +54,7 @@ def get_stock(code,fq):
     return stock_df
 
 # 获取一定范围内的数据
+
 def Stock_range(stock_df,Context,enable_hist_df,td,count):
     list = stock_df['date'].tolist()
     try:
