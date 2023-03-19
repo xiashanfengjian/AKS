@@ -14,7 +14,7 @@ You can customize functions, change data sources, and even easily modify interna
 
 4.get_today_data(Context,code):获取今天价格.依次输入，用户信息,股票代码
 
-5.order_root(Context,today_price,code,amount,o_or_c):最底层的下单函数。依次输入，用户信息，今天价格，股票代码，交易数量，open_or_close
+5.order_root(Context,today_price,code,amount,o_or_c):最底层的下单函数。依次输入，用户信息，今天价格，股票代码，交易数量，open_or_close，考虑了买入卖出佣金
 
 6.order(Context,code,amount,o_or_c):下单函数之一。依次输入，用户信息，股票代码，交易数量，open_or_close
 
