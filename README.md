@@ -37,3 +37,7 @@ You can customize functions, change data sources, and even easily modify interna
 15.2023.3.2更新了benchmark.和改善了图形界面。
 
 16.601318是测试用数据
+
+17.增加了交易判断器g.deal, 当它为0时才运行策略
+18.考虑了全佣的手续费，按照0.2%买入卖出
+19.考虑了随机的交易滑点
