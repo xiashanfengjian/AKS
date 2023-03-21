@@ -71,7 +71,7 @@ def get_stock(code,fq):
     return stock_df
 
 # 获取一定范围内的数据
-def Stock_range(stock_df,Context,enable_hist_df,td,count):
+def Stock_range(stock_df,td,count):
     list = stock_df['date'].tolist()
     try:
         index = list.index(td.strftime('%Y-%m-%d'))
@@ -98,7 +98,9 @@ def order_root(Context,today_price,code,amount,o_or_c):
         print(f"\033[33m{'今日停牌！'}\033[0m")
         return
     ymd = today_price['date'][0]
-    today_price = today_price[o_or_c][0]
+    # 应在底层下单函数中考虑滑点
+    logi = random.choice([-1,1])
+    today_price = today_price[o_or_c][0]*(1+logi*0.5/100)
     if amount>0:
         if Context.cash - amount*today_price < 0:
             amount = int(int(Context.cash/today_price)/100)
@@ -143,37 +145,42 @@ def order_root(Context,today_price,code,amount,o_or_c):
     return
 
 
-def order(Context,code,amount,o_or_c):
-    today_price = get_today_data(Context,code)
+def order(Context,code,amount,o_or_c,today_price = 0):
+    if today_price == 0:
+        today_price = get_today_data(Context,code)
     order_root(Context,today_price,code,amount,o_or_c)
 
-def order_target(Context,code,amount,o_or_c):
+def order_target(Context,code,amount,o_or_c,today_price = 0):
     if amount<0:
         print('数量不能为负，已调整为0')
-    today_price = get_today_data(Context,code)
+    if today_price == 0:
+        today_price = get_today_data(Context,code)
     hold_amount = Context.positions.get(code,0)
     delta_amount = amount - hold_amount
     order_root(Context,today_price,code,delta_amount,o_or_c)
 
-def order_value(Context,code,value,o_or_c):
-    today_price = get_today_data(Context,code)
+def order_value(Context,code,value,o_or_c,today_price = 0):
+    if today_price == 0:
+        today_price = get_today_data(Context,code)
     amount = int(value/today_price[o_or_c][0])
     order_root(Context,today_price,code,amount,o_or_c)
 
-def order_target_value(Context,code,value,o_or_c):
+def order_target_value(Context,code,value,o_or_c,today_price = 0):
     if value<0:
         print('价值不能为负，已调整为0')
 
-    # 停牌是否有问题
-    today_price = get_today_data(Context,code)
+    if today_price == 0:
+        today_price = get_today_data(Context,code)
     hold_value = Context.positions.get(code,0)*today_price[o_or_c][0]
     delta_value = value - hold_value
     order_value(Context,code,delta_value,o_or_c)
-
 # 非常重要，这是一个全局类，用于方便用户在初始化函数和策略函数里随心所欲地定义变量，这些变量都会被存在g的属性里
 class G:
     pass
 g = G()
+# 交易判断器
+g.deal = 0
+
 
 # 回测函数
 def run(Context):
@@ -184,7 +191,13 @@ def run(Context):
     last_prize = {}
     for td in Context.date_range['trade_date']:
         Context.dt = dateutil.parser.parse(str(td))
-        handle(Context,td)
+        
+        # 判断今日是否交易
+        if g.deal == 0:
+            handle(Context,td)
+        else:
+            g.deal -= 1
+
         Cash = Context.cash
         for stock_code in Context.positions:
             today_p = get_today_data(Context,stock_code)
@@ -264,7 +277,7 @@ enable_hist_df.columns = [
 
 def handle11(Context,td):
     # 是否要考虑停牌？
-    history = Stock_range(get_stock(g.code,Context.fq),Context,enable_hist_df,td,10)
+    history = Stock_range(get_stock(g.code,Context.fq),td,10)
     if len(history) == 0:
         print(f"\033[34m{'今日停牌，不交易'}\033[0m")
     else:
