@@ -4,7 +4,7 @@ Aks provides the basic framework needed for backtesting, which you can modify an
 My goal is to have it be highly customizable like vim while retaining its core functionality.
 You can customize functions, change data sources, and even easily modify internal functions.
 
-# 包括10个主要函数func：
+# Aks包括10个主要函数func：
 
 1.trade_get():获取交易日数据
 
