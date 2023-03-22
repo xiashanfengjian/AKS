@@ -10,7 +10,7 @@ You can customize functions, change data sources, and even easily modify interna
 
 2.get_stock(code,fq):获取股票数据，code股票代码，fq：复权类型
 
-3.Stock_range(stock_df,Context,enable_hist_df,td,count):获取一定时间范围内的数据。依次输入，股票数据，用户信息，交易日数据，当天日期，数量
+3.Stock_range(stock_df,td,count):获取一定时间范围内的数据。依次输入，股票数据，当天日期，数量
 
 4.get_today_data(Context,code):获取今天价格.依次输入，用户信息,股票代码
 
