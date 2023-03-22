@@ -6,6 +6,7 @@ import numpy as np
 import dateutil
 import random
 import time
+import os
 
 
 if True:
@@ -113,8 +114,7 @@ def order_root(Context,today_price,code,amount,o_or_c):
             amount = int(amount/100)
             amount = amount*100
             print(f"\033[31m{ymd}\033[0m",f"\033[33m{':现金充足，已做整数调整，调整后买入%d' % (amount)}\033[0m")
-        # 买入手续费，按全佣上限0.2%
-        service = abs(amount)*today_price*0.2/100
+        
     else:
         if amount+Context.positions.get(code,0)<=0:
             if amount+Context.positions.get(code,0)<0:
@@ -131,19 +131,28 @@ def order_root(Context,today_price,code,amount,o_or_c):
             amount = int(amount/100)
             amount = amount*100
             print(f"\033[31m{ymd}\033[0m",f"\033[33m{':持仓充足，已做整数调整，调整后卖出%d' % -amount}\033[0m")
-        # 卖出手续费，按全佣上限0.2%
-        service = abs(amount)*today_price*0.2/100
-    if service <= 5:
-        service = 5
+
+            
+    if amount != 0:
+        if amount>0:
+            # 买入手续费，按全佣上限0.2%
+            service = abs(amount)*today_price*0.2/100
+        else:
+            # 卖出手续费，按全佣上限0.2%
+            service = abs(amount)*today_price*0.2/100
+        if service <= 5:
+            service = 5
+            Context.cash -= service
+    else:
+        service = 0
+
     Context.cash -= amount*today_price
-    Context.cash -= service
     print('          ',f"\033[30m{'Service charge:'}\033[0m",round(service,2))
     Context.positions[code] = Context.positions.get(code,0)+amount
     # print(Context.positions)
     if Context.positions[code] == 0:
         del Context.positions[code]
     return
-
 
 def order(Context,code,amount,o_or_c,today_price = 0):
     if today_price == 0:
@@ -238,9 +247,13 @@ def set_benchmark(Context,code):
 def benchmark(Context):
     stock_df = get_stock(Context.benchmark,Context.fq)
     stock_range = stock_df[stock_df['date'].between(Context.date_start,Context.date_end)]
-    # stock_range[['close']].plt()
-    init_r = stock_range['close'][0]
-    return init_r
+    if len(stock_range['close'])==0:
+        print(f"\033[31m{'无法获取历史数据，回测失败！起始时间为'}\033[0m",stock_df['date'][0])
+        os.kill()
+    # print(stock_range)
+    else:
+        init_r = stock_range['close'][0]
+        return init_r
 
 class Context:
     def __init__(self, cash, date_start, date_end, fq):
