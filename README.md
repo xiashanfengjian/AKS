@@ -44,8 +44,8 @@ You can customize functions, change data sources, and even easily modify interna
 
 19.考虑了随机的交易滑点
 
-20. 2023-03-22修改了下单为0仍需交手续费的bug
+20.2023-03-22修改了下单为0仍需交手续费的bug
 
-21. 2023-03-24可以设置沪深300，上证50等作为benchmark
+21.2023-03-24可以设置沪深300，上证50等作为benchmark
 
-22. plot_return()单独设置绘图参数
+22.plot_return()单独设置绘图参数
