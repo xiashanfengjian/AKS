@@ -233,13 +233,18 @@ def run(Context):
     plt_value['return'] = (plt_value['value']-init_cash) / init_cash
     plt_value['benchmarker'] = (plt_value['value_ben'] - init_ben) / init_ben
     plt_value[['return','benchmarker']].plot()
+    set_benchmark2(Context)
+    plot_return(Context)
+
+def plot_return(Context):
+    plt.legend()
     plt.axhline(y=0,c='grey',ls='--',lw=1,zorder=0)
     plt.grid(alpha=0.4)
     plt.xlabel(u'Date',fontsize=16)
     plt.ylabel(u'Return',fontsize=16)
-    plt.savefig('./'+Context.date_start+Context.date_end+'.png',bbox_inches='tight', dpi=256)
+    plt.show()
+    plt.savefig('./check_o/'+Context.date_start+'.png',bbox_inches='tight', dpi=256)
     plt.close()
-    # plt.show()
 
 def set_benchmark(Context,code):
     Context.benchmark = code
@@ -254,6 +259,17 @@ def benchmark(Context):
     else:
         init_r = stock_range['close'][0]
         return init_r
+
+def set_benchmark2(Context):
+    df = ak.stock_a_pe(symbol=Context.benchmark2)
+    df.index = pd.to_datetime(df['date'])
+    try:
+        df = df['close'][Context.date_start:Context.date_end]
+        df = (df[:]-df[0])/df[:]
+        plt.plot(df.index,df,label=Context.benchmark2)
+    except:
+        print('无法获取benchmark')
+        return
 
 class Context:
     def __init__(self, cash, date_start, date_end, fq):
