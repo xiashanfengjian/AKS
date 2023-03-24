@@ -1,4 +1,4 @@
-This is an akshare-based stock backtesting framework.
+# This is an akshare-based stock backtesting framework.
 The stock data here is from akshare.
 Aks provides the basic framework needed for backtesting, which you can modify and update to meet your personal needs.
 My goal is to have it be highly customizable like vim while retaining its core functionality.
@@ -34,9 +34,9 @@ You can customize functions, change data sources, and even easily modify interna
 
 14.使用时需要导入aks.py,获取交易日信息，并新建Init函数记录取票代码等信息。新建handle函数，进行策略部署，然后调用run函数即可。在aks.py最后有一示例代码文件。
 
-15.2023.3.2更新了benchmark.和改善了图形界面。
+15. 2023.3.2更新了benchmark.和改善了图形界面。
 
-16.601318是测试用数据
+16. 601318是测试用数据
 
 17.增加了交易判断器g.deal, 当它为0时才运行策略
 
@@ -44,4 +44,8 @@ You can customize functions, change data sources, and even easily modify interna
 
 19.考虑了随机的交易滑点
 
-20.20230322修改了下单为0仍需交手续费的bug
+20. 2023-03-22修改了下单为0仍需交手续费的bug
+
+21. 2023-03-24可以设置沪深300，上证50等作为benchmark
+
+22. plot_return()单独设置绘图参数
