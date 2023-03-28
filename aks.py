@@ -142,7 +142,7 @@ def order_root(Context,today_price,code,amount,o_or_c):
             service = abs(amount)*today_price*0.2/100
         if service <= 5:
             service = 5
-            Context.cash -= service
+        Context.cash -= service
     else:
         service = 0
 
