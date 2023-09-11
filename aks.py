@@ -187,7 +187,7 @@ def order_target_value(Context,code,value,o_or_c,today_price = 0):
 class G:
     pass
 g = G()
-# 交易判断器
+#交易判断器
 g.deal = 0
 
 
