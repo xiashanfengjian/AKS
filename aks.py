@@ -271,6 +271,31 @@ def set_benchmark2(Context):
         print('无法获取benchmark')
         return
 
+def opt(f_list,l,td):
+    ln = len(f_list)
+    dfall = np.ones((l,ln))
+
+    for co in f_list[:]:
+        stock_df = Stock_range(co,td,l)
+        if len(stock_df['date'])>400:
+            # dfall[:,f_list.index(co)] = (stock_df['close'][-200:]-stock_df['open'][-200:])/stock_df['close'][-50:].mean()
+            dfall[:,f_list.index(co)] = (stock_df['close'][-l:])/stock_df['close'][-50:].mean()
+    data = dfall.T
+    cov = np.cov(data)
+    eigenvalue, featurevector = np.linalg.eig(cov)
+    '''print('协方差矩阵：',cov)
+    print('特征值：',eigenvalue)
+    print('特征向量：',featurevector)'''
+    i = list(eigenvalue).index(min(eigenvalue))
+    d = list(featurevector[4,:]/sum(featurevector[4,:]))
+    D = [j for j in d if j > 0]
+    Dn = [f_list[d.index(j)] for j in d if j > 0]
+    D = D/sum(D)
+    print('最小特征值：',min(eigenvalue))
+    print('组合比例：',Dn,D)
+
+    return Dn,D
+
 class Context:
     def __init__(self, cash, date_start, date_end, fq):
         self.cash = cash
