@@ -296,6 +296,17 @@ def opt(f_list,l,td):
 
     return Dn,D
 
+def Least_square(x,y):
+    N = len(x)
+    sumx = sum(x)
+    sumy = sum(y)
+    sumx2 = sum(x**2)
+    sumxy = sum(x*y)
+    A = np.mat([[N,sumx],[sumx,sumx2]])
+    b = np.array([sumy,sumxy])
+      
+    return np.linalg.solve(A,b)
+
 class Context:
     def __init__(self, cash, date_start, date_end, fq):
         self.cash = cash
