@@ -76,7 +76,7 @@ def Stock_range(stock_df,td,count):
     list = stock_df['date'].tolist()
     try:
         index = list.index(td.strftime('%Y-%m-%d'))
-        stock_range = stock_df[stock_df['date'].between(stock_df['date'][index-count+1],stock_df['date'][index])]
+        stock_range = stock_df[stock_df['date'].between(stock_df['date'][index-count],stock_df['date'][index-1])]
     except:
         stock_range = []
     # print(stock_range)
