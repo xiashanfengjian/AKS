@@ -53,3 +53,5 @@ You can customize functions, change data sources, and even easily modify interna
 23.2023-10-15添加opt函数，用于资产组合优化，opt(f_list,l,td) 依次为股票代码列表，用于资产组合优化的时间序列长度，以及当天日期，返回买入标的列表，以及相应资产比例。
 
 24.2023-10-16 Least_square(x,y) 最小二乘法回归直线，返回截距和斜率
+
+25.2023-11-20 func.py存放了几种技术指标的计算函数
