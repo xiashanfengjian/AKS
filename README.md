@@ -55,3 +55,7 @@ You can customize functions, change data sources, and even easily modify interna
 24.2023-10-16 Least_square(x,y) 最小二乘法回归直线，返回截距和斜率
 
 25.2023-11-20 func.py存放了几种技术指标的计算函数
+
+# Aks案例测试：
+2023-11-20 RSRS择时
+2023-12-24 强化学习demo
