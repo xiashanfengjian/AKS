@@ -440,59 +440,6 @@ def handle(Context,td,value):
         
     return ma5,ma20,Signal
 
-def handle(Context,td,value):
-    t = datetime.strptime(td, "%Y-%m-%d %H:%M:%S")
-    Context.t = td
-    print(t)
-    
-    Signal=2
-    
-    # 是否要考虑停牌？
-    history = Stock_range(get_stock(g.code,Context.fq),t,41)
-    if len(history) == 0:
-        print(f"\033[34m{'今日停牌，不交易'}\033[0m")
-        return 0,0,Signal
-    else:
-        ma20 = history['close'][:].mean()
-        # ma2 = history['close'][-20:].mean()
-        ma5 = history['close'][-5:].mean()
-        n = 10
-        x = np.arange(n)
-        y = history['close'][-n:]
-        y = np.log(y)
-        c,bh = Least_square(x,y)
-
-        sig = np.std(y)
-
-        print(c,bh)
-        real = math.log(history['close'][-1])
-        pred0 = bh*y+c
-        pred = pred0-y
-        # 残差的标准值与均值，类似于二阶差分
-        mu, sigma = np.mean(pred),np.std(pred)
-        #print(mu,sigma)
-        bias = real-pred0[-1]
-        
-        num = (bias-mu)/sigma
-        print(mu,sigma,bias,num)
-        corr = np.corrcoef(history['close'].tolist()[-10:],history['volume'].tolist()[-10:])[0,1]
-        '''plt.scatter(x,y-c)
-        plt.plot(x,pred0-c)
-        plt.plot(x,pred)
-        plt.show()'''
-        if num<-2.0 and corr < 0 and g.code not in Context.positions:
-            
-            print(mu,sigma,bias)
-            print(corr,num)
-            order_value(Context,g.code,Context.cash,g.c)
-            Signal = 1
-            g.deal = 0
-        elif num>0.0 and g.code in Context.positions:
-            order_target(Context,g.code,0,g.c)
-            Signal = 0
-            # print(weekday)
-    return ma5,ma20,Signal
-
 def handlex(Context,td,value):
     t = datetime.strptime(td, "%Y-%m-%d %H:%M:%S")
     Context.t = td
@@ -505,7 +452,7 @@ def handlex(Context,td,value):
         print(f"\033[34m{'今日停牌，不交易'}\033[0m")
         return 0,0,Signal
     else:
-        his = np.log(history['close'][:])
+        his = history['close'][:]
         ma = his.mean()
         #m = history['close'][0]
         up = math.exp(ma + 2*his.std())
