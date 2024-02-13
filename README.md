@@ -59,3 +59,7 @@ You can customize functions, change data sources, and even easily modify interna
 # Aks案例测试：
 2023-11-20 RSRS择时
 2023-12-24 强化学习demo
+
+# AKS update aksm.py
+2024-02-13 支持分钟级数据回测，包括：5min，30min，60min data文件夹存放了测试数据
+
